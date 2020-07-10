@@ -1,32 +1,31 @@
 import Koa from 'koa';
-import http from 'http';
-import https from 'https';
+import koaBodyparser from 'koa-bodyparser';
+import koaRouter from 'koa-router';
+const router = koaRouter();
 const { log } = console;
 const app = new Koa();
 
-http.createServer(app.callback()).listen(3001);
-https.createServer(app.callback()).listen(3002);
 // logger
 app.use(async (ctx, next) => {
-	log(JSON.stringify(ctx.app));
 	await next();
-	const rt = ctx.response.get('X-Response-Time');
-	console.log(`${ctx.method} ${ctx.url} - ${rt}`);
 });
-
-// x-response-time
-
-app.use(async (ctx, next) => {
-	const start = Date.now();
-	await next();
-	const ms = Date.now() - start;
-	ctx.set('X-Response-Time', `${ms}ms`);
+router.get('/home', async (ctx) => {
+	ctx.response.body = `<h1>home ${JSON.stringify(ctx.request.url)}</h1>`;
 });
-
-// response
-
-app.use(async (ctx) => {
-	ctx.body = 'Hello World';
+router.get('/', async (ctx) => {
+	ctx.response.body = '<h1>index</h1>';
 });
-
-app.listen(3000);
+router.post('/update', async (ctx, next) => {
+	log('user', ctx.request);
+	// if (name === 'koa' && password === '12345') {
+	// 	ctx.response.body = `<h1>Welcome, ${name}!</h1>`;
+	// } else {
+	// 	ctx.response.body = `<h1>Login failed!</h1>
+	// <p><a href="/">Try again</a></p>`;
+	// }
+});
+app.use(koaBodyparser());
+app.use(router.routes());
+app.listen(3000, () => {
+	log('Server running at:http://localhost:3000');
+});
